@@ -72,6 +72,7 @@ class FlowClient:
         self._generation_unusual_until = 0.0
         self._generation_last_unusual_at: Optional[float] = None
         self._generation_last_unusual_rpc: Optional[str] = None
+        self._dispatch_counter = 0
         # WS stats
         self._ws_connect_count = 0
         self._ws_disconnect_count = 0
@@ -138,10 +139,19 @@ class FlowClient:
         )
 
     def _extension_candidates(self, require_token: bool):
-        """Return usable extensions in preferred routing order."""
+        """Return usable extensions in preferred routing order with load balancing."""
         now = time.time()
         candidates = []
-        for ws, session in self._extensions.items():
+
+        # Count active in-flight requests per websocket connection
+        in_flight: dict[object, int] = {}
+        for target_ws in self._pending_ws.values():
+            in_flight[target_ws] = in_flight.get(target_ws, 0) + 1
+
+        extensions_list = list(self._extensions.items())
+        total_ext = len(extensions_list)
+
+        for idx, (ws, session) in enumerate(extensions_list):
             if require_token and not session.get("flow_key"):
                 continue
             recency = (
@@ -149,20 +159,31 @@ class FlowClient:
                 if require_token
                 else session.get("connected_at")
             )
+            # Round-robin offset so equal-load browsers rotate smoothly
+            rr_offset = (
+                (idx - (self._dispatch_counter % total_ext)) % total_ext
+                if total_ext > 0
+                else 0
+            )
             candidates.append({
                 "ws": ws,
                 "available": session.get("unavailable_until", 0) <= now,
+                "in_flight": in_flight.get(ws, 0),
+                "rr_offset": rr_offset,
                 "active": ws is self._extension_ws,
                 "recency": recency or 0,
             })
 
-        # Prefer an available active session, then the most recently
-        # authenticated alternatives. Temporarily unavailable sessions remain
-        # last-resort candidates so a single-profile setup can still recover.
+        # Load balancing priority:
+        # 1. Available (not in temporary cooldown)
+        # 2. Lowest number of in-flight active requests (fewer is better)
+        # 3. Round-robin sequence (rotates evenly among equal-load browsers)
+        # 4. Most recent auth/connect time
         candidates.sort(
             key=lambda item: (
                 item["available"],
-                item["active"] and item["available"],
+                -item["in_flight"],
+                -item["rr_offset"],
                 item["recency"],
             ),
             reverse=True,
@@ -456,6 +477,7 @@ class FlowClient:
             if extension_ws not in self._extensions:
                 continue
 
+            self._dispatch_counter += 1
             self._extension_ws = extension_ws
             self._flow_key = self._extensions[extension_ws].get("flow_key")
             req_id = str(uuid.uuid4())

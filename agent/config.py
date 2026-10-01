@@ -36,10 +36,10 @@ FLOW_ALLOW_DEGRADED = os.environ.get("FLOW_ALLOW_DEGRADED", "0") == "1"
 # Process-wide guard for every CAPTCHA-bearing generation submit, including
 # direct API calls that bypass the background worker's limiter.
 FLOW_GENERATION_MIN_INTERVAL_S = max(
-    0.0, float(os.environ.get("FLOW_GENERATION_MIN_INTERVAL_S", "3"))
+    0.0, float(os.environ.get("FLOW_GENERATION_MIN_INTERVAL_S", "1.0"))
 )
 FLOW_GENERATION_MAX_CONCURRENT = max(
-    1, int(os.environ.get("FLOW_GENERATION_MAX_CONCURRENT", "1"))
+    1, int(os.environ.get("FLOW_GENERATION_MAX_CONCURRENT", "3"))
 )
 FLOW_UNUSUAL_ACTIVITY_COOLDOWN_S = max(
     0.0, float(os.environ.get("FLOW_UNUSUAL_ACTIVITY_COOLDOWN_S", "120"))
