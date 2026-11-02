@@ -6,6 +6,15 @@ from agent.services import flow_batch as fb
 from agent.services import flow_client as fc
 
 
+def test_extension_candidates_start_with_dispatch_counter():
+    client = fc.FlowClient()
+    extension = object()
+    client.set_extension(extension)
+
+    assert client._dispatch_counter == 0
+    assert client._extension_candidates(require_token=False) == [extension]
+
+
 @pytest.mark.asyncio
 async def test_generation_rpc_is_globally_serialized(monkeypatch):
     monkeypatch.setattr(fc, "FLOW_GENERATION_MAX_CONCURRENT", 1)

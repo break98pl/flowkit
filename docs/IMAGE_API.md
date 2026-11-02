@@ -27,7 +27,8 @@ Current Flow UI model ids observed on the migrated frontend:
   thinking variants (accepted, not yet exercised live)
 - `HARBOR_SEAL` — Nano Banana 2 Lite
 - `NARWHAL` — Nano Banana 2, retired: answers `[5] NOT_FOUND` since October
-  2026. The `NANO_BANANA_2` nickname maps to `BELUGA` instead.
+  2026. Legacy requests using `NARWHAL` or the `NANO_BANANA_2` nickname are
+  mapped to its successor, `BELUGA`.
 
 Friendly aliases from `models.json` continue to work. Flow Kit also passes a
 syntactically valid future wire model id through unchanged instead of silently

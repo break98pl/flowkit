@@ -111,7 +111,7 @@ class TestImageRequest:
 
     def test_the_model_is_named_in_slot_5(self):
         item = inner(fb.image_request("a cat", self.PID, model="NARWHAL"))[1][0]
-        assert item[5] == "NARWHAL"
+        assert item[5] == "BELUGA"
 
 
 class TestImageUpscaleRequest:
@@ -336,8 +336,10 @@ class TestResolvers:
     def test_nano_banana_2_lands_on_its_successor_not_the_retired_narwhal(self):
         assert fb.resolve_image_model("NANO_BANANA_2") == "BELUGA"
 
-    def test_wire_names_and_future_model_ids_pass_through(self):
-        assert fb.resolve_image_model("NARWHAL") == "NARWHAL"
+    def test_retired_wire_model_resolves_to_its_successor(self):
+        assert fb.resolve_image_model("NARWHAL") == "BELUGA"
+
+    def test_current_wire_names_and_future_model_ids_pass_through(self):
         assert fb.resolve_image_model("BELUGA") == "BELUGA"
         assert fb.resolve_image_model("beluga_thinking_high") == "BELUGA_THINKING_HIGH"
         assert fb.resolve_image_model("harbor_seal") == "HARBOR_SEAL"

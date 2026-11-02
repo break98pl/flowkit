@@ -58,6 +58,7 @@ class FlowClient:
         self._extensions: dict[object, dict] = {}
         self._pending: dict[str, asyncio.Future] = {}
         self._pending_ws: dict[str, object] = {}
+        self._dispatch_counter = 0
         self._flow_key: Optional[str] = None
         # Per-operation poll state. `_operation_projects` says which project
         # listing to look a finished media up in; `_operation_media` caches the
